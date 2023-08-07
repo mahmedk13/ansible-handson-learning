@@ -1,0 +1,75 @@
+- name: Install Docker
+  hosts: all
+  become: yes
+  vars_files:
+    - project-vars
+  tasks:
+    - name: Install prerequisite packages
+      apt:
+        name: "{{ item }}"
+        state: present
+      with_items:
+        - apt-transport-https
+        - ca-certificates
+        - curl
+        - software-properties-common
+      
+
+    - name: Add Docker GPG key
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+      
+
+    - name: Add Docker repository
+      apt_repository:
+        repo: deb https://download.docker.com/linux/ubuntu jammy stable
+        state: present
+      
+
+    - name: Install Docker
+      apt:
+        name: docker.io
+        state: present
+      
+
+    # - name: pull nginx image
+    #   community.docker.docker_image:
+    #     name: redis
+    #     source: pull
+      
+    
+    # - name: Create nginx container
+    #   community.docker.docker_container:
+    #     name: my_nginx_container  # Give a unique name for your container
+    #     image: nginx             # The name of the Docker image to use
+    #     state: started           # Ensure the container is running
+    #     ports:
+    #       - "80:80"              # Map host port 80 to container port 80
+
+    - name: Download Docker Compose binary
+      shell: |
+        curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-{{ ansible_system | lower }}-{{ ansible_machine }}" -o /usr/local/bin/docker-compose
+        chmod +x /usr/local/bin/docker-compose
+      
+
+    - name: Copy docker-compose.yml to a different location
+      copy:
+        src: "/home/ansible_project/docker-compose.yaml"
+        dest: "/home"
+
+    - name: docker login
+      community.docker.docker_login:
+        registry_url: https://index.docker.io/v1/
+        username: mahmedk13@gmail.com
+        password: "{{docker_password}}"
+    
+    - name: Install docker-compose Python module
+      pip:
+        name: docker-compose
+        state: present
+  
+    - name: docker compose up
+      community.docker.docker_compose:
+        project_src: "/home"
+        

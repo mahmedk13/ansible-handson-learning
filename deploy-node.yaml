@@ -21,6 +21,15 @@
         dest: /tmp/nodejs_app/simple-nodejs-master.zip
     - name: Unarchive ZIP on remote machine
       command: unzip -o /tmp/nodejs_app/simple-nodejs-master.zip -d /tmp/nodejs_app/
-      
-
-    
+    - name: Install the dependencies
+      npm:
+        path: /tmp/nodejs_app/simple-nodejs-master  
+    - name: Start the application
+      command:
+        chdir: /tmp/nodejs_app/simple-nodejs-master/app
+        cmd: node server
+      async: 1000
+      poll: 0
+    - name: Ensure app is running
+      shell: ps aux | grep node
+      register: app_status
